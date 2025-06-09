@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Unit Converter丨Unit converter script</title>
+  <meta name="description" content="Universal Unit Converter: length, weight, volume, and area conversions in pure JavaScript" />
+  <meta name="keywords" content="unit converter script, length converter, volume converter, weight converter, area converter, JavaScript tool" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; color: #333; }
+    label, select, input { display: block; margin: 10px 0; font-size: 16px; }
+    select, input[type="text"] { width: 100%; padding: 8px; }
+    #conversionResult { margin-top: 20px; font-weight: bold; font-size: 18px; }
+    #categoryMenu ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; }
+    #categoryMenu li { margin-right: 15px; }
+    #categoryMenu li#active a { font-weight: bold; color: red; }
+    #categoryMenu a { text-decoration: none; color: #0077cc; }
+    .full-version-link { margin-top: 40px; text-align: center; }
+    .full-version-link a { font-size: 18px; color: #fff; background-color: #0077cc; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }
+    .full-version-link a:hover { background-color: #005fa3; }
+    .external-link-note { margin-top: 20px; text-align: center; font-size: 16px; }
+    .external-link-note a { color: #0077cc; text-decoration: none; }
+    .external-link-note a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>Universal Unit Converter</h1>
+
+  <div id="categoryMenu"></div>
+
+  <form name="unitConverterForm">
+    <label for="inputValue">Enter Value:</label>
+    <input type="text" id="inputValue" name="inputValue" onkeyup="executeConversion();">
+
+    <label for="unitFrom">From:</label>
+    <select name="unitFrom" id="unitFrom" onchange="executeConversion();"></select>
+
+    <label for="unitTo">To:</label>
+    <select name="unitTo" id="unitTo" onchange="executeConversion();"></select>
+
+    <label for="outputValue">Result:</label>
+    <input type="text" id="outputValue" name="outputValue" readonly>
+
+    <div id="conversionResult"></div>
+  </form>
+<div class="external-link-note">
+    Looking to integrate or resell? Visit <a href="https://unitfusion.shop" target="_blank">Unit Converter Script</a>
+  </div>
+  <script>
+    const categories = [
+      {
+        name: "Length",
+        id: "lengthUnits",
+        units: [
+          { name: "Meter", toBase: "iv", fromBase: "iv" },
+          { name: "Kilometer", toBase: "iv * 1000", fromBase: "iv / 1000" },
+          { name: "Centimeter", toBase: "iv * 0.01", fromBase: "iv / 0.01" },
+          { name: "Millimeter", toBase: "iv * 0.001", fromBase: "iv / 0.001" },
+          { name: "Mile", toBase: "iv * 1609.344", fromBase: "iv / 1609.344" },
+          { name: "Inch", toBase: "iv * 0.0254", fromBase: "iv / 0.0254" }
+        ]
+      },
+      {
+        name: "Weight",
+        id: "weightUnits",
+        units: [
+          { name: "Kilogram", toBase: "iv", fromBase: "iv" },
+          { name: "Gram", toBase: "iv * 0.001", fromBase: "iv / 0.001" },
+          { name: "Pound", toBase: "iv * 0.453592", fromBase: "iv / 0.453592" },
+          { name: "Ounce", toBase: "iv * 0.0283495", fromBase: "iv / 0.0283495" }
+        ]
+      },
+      {
+        name: "Volume",
+        id: "volumeUnits",
+        units: [
+          { name: "Cubic Meter", toBase: "iv", fromBase: "iv" },
+          { name: "Liter", toBase: "iv * 0.001", fromBase: "iv / 0.001" },
+          { name: "Milliliter", toBase: "iv * 0.000001", fromBase: "iv / 0.000001" },
+          { name: "US Gallon", toBase: "iv * 0.00378541", fromBase: "iv / 0.00378541" },
+          { name: "Cubic Inch", toBase: "iv * 0.000016387064", fromBase: "iv / 0.000016387064" }
+        ]
+      },
+      {
+        name: "Area",
+        id: "areaUnits",
+        units: [
+          { name: "Square Meter", toBase: "iv", fromBase: "iv" },
+          { name: "Square Kilometer", toBase: "iv * 1e6", fromBase: "iv / 1e6" },
+          { name: "Square Centimeter", toBase: "iv * 0.0001", fromBase: "iv / 0.0001" },
+          { name: "Square Foot", toBase: "iv * 0.092903", fromBase: "iv / 0.092903" },
+          { name: "Acre", toBase: "iv * 4046.856", fromBase: "iv / 4046.856" }
+        ]
+      }
+    ];
+
+    let currentCategory = categories[0];
+
+    function getEl(id) {
+      return document.getElementById(id);
+    }
+
+    function buildCategoryMenu(selected) {
+      let html = "<ul>";
+      for (let cat of categories) {
+        const active = (cat.name === selected) ? "id='active'" : "";
+        html += `<li ${active}><a href='javascript:selectCategory("${cat.name}")'>${cat.name}</a></li>`;
+      }
+      html += "</ul>";
+      getEl("categoryMenu").innerHTML = html;
+    }
+
+    function selectCategory(name) {
+      currentCategory = categories.find(c => c.name === name);
+      loadOptions();
+      buildCategoryMenu(name);
+    }
+
+    function loadOptions() {
+      const fromSelect = document.unitConverterForm.unitFrom;
+      const toSelect = document.unitConverterForm.unitTo;
+      fromSelect.length = 0;
+      toSelect.length = 0;
+
+      currentCategory.units.forEach((unit, index) => {
+        fromSelect.options[index] = new Option(unit.name, index);
+        toSelect.options[index] = new Option(unit.name, index);
+      });
+
+      fromSelect.selectedIndex = 0;
+      toSelect.selectedIndex = 1;
+      executeConversion();
+    }
+
+    function evaluateFormula(formula, iv) {
+      let result;
+      eval("result = " + formula);
+      return result;
+    }
+
+    function sanitize(val) {
+      return val.replace(/\s|,/g, "");
+    }
+
+    function isNumeric(val) {
+      return !isNaN(val) && val.trim() !== '';
+    }
+
+    function formatNumber(val) {
+      if (isNaN(val) || typeof val !== 'number') return "Error";
+      return +val.toFixed(10).replace(/\.0+$/, "").replace(/(\.\d+?)0+$/, "$1");
+    }
+
+    function executeConversion() {
+      const inputVal = sanitize(getEl("inputValue").value);
+      const fromIndex = document.unitConverterForm.unitFrom.selectedIndex;
+      const toIndex = document.unitConverterForm.unitTo.selectedIndex;
+      const units = currentCategory.units;
+
+      if (isNumeric(inputVal)) {
+        const iv = parseFloat(inputVal);
+        const base = evaluateFormula(units[fromIndex].toBase, iv);
+        const result = evaluateFormula(units[toIndex].fromBase, base);
+        const formatted = formatNumber(result);
+
+        getEl("outputValue").value = formatted;
+        getEl("conversionResult").innerHTML = `${inputVal} ${units[fromIndex].name} = ${formatted} ${units[toIndex].name}`;
+      } else {
+        getEl("outputValue").value = "";
+        getEl("conversionResult").innerHTML = inputVal.length ? "<span style='color:red'>Please enter a valid number</span>" : "";
+      }
+    }
+
+    window.onload = () => {
+      selectCategory("Length");
+    };
+  </script>
+</body>
+</html>
