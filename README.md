@@ -21,3 +21,5 @@ A simple and responsive web-based unit converter supporting length, weight, volu
 ## 📄 License
 
 MIT
+👉 **Commercial License & Source Code:**  
+[Unit Converter Script](https://yoursite.com/full-version)
